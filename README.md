@@ -1,8 +1,12 @@
-# Image Resizer
+# Image Resizer for Claude Code
 
 A tiny, static, client-side tool that resizes oversized images and copies them to your clipboard — so you stop losing AI chat sessions to the "image too large" error.
 
 Drop, paste (`⌘V` / `Ctrl+V`), or click → if the image is wider than the threshold, it's resized → result is on your clipboard, ready to paste into Claude Code, ChatGPT, Cursor, or anywhere else.
+
+> Works with **Claude Code**, **ChatGPT**, **Cursor**, **Gemini**, and any other web AI chat. **Not affiliated with Anthropic** — this is an independent community tool.
+
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/yawalkar/image-resizer-for-claude-code)
 
 ## Why this exists
 
@@ -30,8 +34,8 @@ This tool is a one-step intercept: drop the image into the page, and a properly-
 This is a single-file static site served by a Cloudflare Worker on the free plan (100,000 requests/day — plenty for a personal tool).
 
 ```bash
-git clone https://github.com/REPLACE_ME/image-resizer
-cd image-resizer
+git clone https://github.com/yawalkar/image-resizer-for-claude-code
+cd image-resizer-for-claude-code
 npx wrangler login    # one-time, opens browser
 npx wrangler deploy
 ```
