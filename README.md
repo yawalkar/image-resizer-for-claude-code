@@ -22,8 +22,8 @@ This tool is a one-step intercept: drop the image into the page, and a properly-
 ## What it does
 
 - Reads dropped / pasted / picked images directly in the browser
-- If `width > trigger` → re-renders to `target` width via Canvas (aspect ratio preserved, lossless PNG)
-- If `width ≤ trigger` → passes through untouched
+- If `max(width, height) > trigger` → re-renders so the **longest side** equals `target` via Canvas (aspect ratio preserved, lossless PNG). The API rejects images where *either* dimension exceeds the cap, so checking just width isn't enough — tall portrait screenshots break sessions too.
+- If both sides are within `trigger` → passes through untouched
 - Writes the result to your system clipboard via the [Clipboard API][clipboard]
 - Keeps the last 3 results visible as thumbnails — click any to re-copy
 
@@ -50,12 +50,12 @@ npx wrangler dev
 
 ## Configure thresholds
 
-Defaults are conservative for the Claude Code use case — resize anything wider than **1950px** down to **1800px**. Override per-bookmark via URL params:
+Defaults are conservative for the Claude Code use case — resize anything with a side over **1950px** down so the longest side is **1800px**. Override per-bookmark via URL params:
 
-| Param     | Default | Meaning                                                    |
-| --------- | ------- | ---------------------------------------------------------- |
-| `trigger` | `1950`  | Resize when image width is greater than this (in pixels)   |
-| `target`  | `1800`  | Resize to this width (height auto-scaled)                  |
+| Param     | Default | Meaning                                                                |
+| --------- | ------- | ---------------------------------------------------------------------- |
+| `trigger` | `1950`  | Resize when *either* width or height is greater than this (in pixels)  |
+| `target`  | `1800`  | Resize so the longest side equals this; the other side scales to match |
 
 Examples:
 
@@ -73,8 +73,8 @@ File / Paste / Drop
      ↓
 createImageBitmap()  ← decode in the browser
      ↓
-width > trigger?
-     ├─ yes → Canvas: drawImage(img, 0, 0, target, scaledHeight) → toBlob('image/png')
+max(width, height) > trigger?
+     ├─ yes → ratio = target / max(w,h); Canvas drawImage at (w*ratio, h*ratio) → toBlob('image/png')
      └─ no  → use original blob untouched
      ↓
 navigator.clipboard.write([new ClipboardItem({ [type]: blob })])

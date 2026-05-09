@@ -13,10 +13,10 @@ function readParam(name, fallback) {
   return Math.min(Math.max(n, MIN_WIDTH), MAX_WIDTH);
 }
 
-let TRIGGER_WIDTH = readParam('trigger', DEFAULT_TRIGGER);
-let TARGET_WIDTH  = readParam('target',  DEFAULT_TARGET);
+let TRIGGER_SIZE = readParam('trigger', DEFAULT_TRIGGER);
+let TARGET_SIZE  = readParam('target',  DEFAULT_TARGET);
 // Target must not exceed trigger — otherwise we'd "resize up", which is nonsense.
-if (TARGET_WIDTH > TRIGGER_WIDTH) TARGET_WIDTH = TRIGGER_WIDTH;
+if (TARGET_SIZE > TRIGGER_SIZE) TARGET_SIZE = TRIGGER_SIZE;
 
 const dropzone     = document.getElementById('dropzone');
 const filepicker   = document.getElementById('filepicker');
@@ -26,8 +26,8 @@ const historyWrap  = document.getElementById('history-wrap');
 
 const subtitleTrigger = document.getElementById('subtitle-trigger');
 const subtitleTarget  = document.getElementById('subtitle-target');
-if (subtitleTrigger) subtitleTrigger.textContent = TRIGGER_WIDTH + 'px';
-if (subtitleTarget)  subtitleTarget.textContent  = TARGET_WIDTH  + 'px';
+if (subtitleTrigger) subtitleTrigger.textContent = TRIGGER_SIZE + 'px';
+if (subtitleTarget)  subtitleTarget.textContent  = TARGET_SIZE  + 'px';
 
 const history = [];
 
@@ -71,17 +71,22 @@ async function resizeIfNeeded(file) {
   const origW  = bitmap.width;
   const origH  = bitmap.height;
 
+  // Claude API rejects images where EITHER dimension exceeds the cap, so we
+  // resize based on the longest side, not just width.
+  const maxSide = Math.max(origW, origH);
+
   let blob, newW, newH, resized;
 
-  if (origW <= TRIGGER_WIDTH) {
+  if (maxSide <= TRIGGER_SIZE) {
     // Pass through untouched. Avoids re-encoding cost and preserves bytes.
     blob = file;
     newW = origW;
     newH = origH;
     resized = false;
   } else {
-    newW = TARGET_WIDTH;
-    newH = Math.round(origH * (TARGET_WIDTH / origW));
+    const ratio = TARGET_SIZE / maxSide;
+    newW = Math.round(origW * ratio);
+    newH = Math.round(origH * ratio);
     const canvas = document.createElement('canvas');
     canvas.width  = newW;
     canvas.height = newH;
@@ -196,7 +201,7 @@ async function processFile(file) {
 
     const detail = result.resized
       ? `${result.origW}×${result.origH} → ${result.newW}×${result.newH}  ·  ${fmtBytes(result.origSize)} → ${fmtBytes(result.blob.size)}`
-      : `${result.origW}×${result.origH}  ·  ${fmtBytes(result.blob.size)} (already under ${TRIGGER_WIDTH}px — passed through)`;
+      : `${result.origW}×${result.origH}  ·  ${fmtBytes(result.blob.size)} (both sides ≤ ${TRIGGER_SIZE}px — passed through)`;
 
     if (writeRes.ok) {
       renderStatus({
